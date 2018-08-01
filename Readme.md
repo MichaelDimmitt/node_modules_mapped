@@ -3,6 +3,11 @@ Disclaimer: This application is on the list of apps that I expect people to tell
 <br/>Take this app with a grain of salt. 
 <br/>It was an experiment and a bunch of fun 😉
 
+## Start with Lessons Learned:
+I ended up using this application to map the project out but did not actually have the project refer to its own node_modules folder. Instead the scripts section of the package.json in every application I was going to use had `cd -P .;` prepended to every script. This small command says ... if im in a simlink go to the original folder. Which would arrive at the node_modules folder and look to its neigbor node_modules instead of its children node_modules.
+
+Warning: take care if you link your node_modules localy pre publishing them as this script should not be implemented under that circumstance. Therefore you should probably store these as production only scripts in the package.json.
+
 ## The Simlink Node Module Mapper
 low/no overhead, symlink node_modules. Tell the package dependency path.
 
@@ -50,3 +55,26 @@ node_modules_mapped
 </pre>
 
 ![what have i done 😱](https://user-images.githubusercontent.com/11463275/43528334-b5f1dafa-9576-11e8-83dc-1f4e1d7e960a.png)
+
+## Usage in your project:
+Everything actually runs in the node_modules folder; as long as `cd -P .;` is prepended to your package.json scripts.
+
+## Analysis
+"node_modules_mapped" contains symlinks to your "node_modules" projects, making the program very lightweight.
+
+The size of the "node_modules_mapped" folder for "aerial_desktop" implementation was 83 bytes.
+<br/>The overhead for "aerial_desktop" implementation is around 1 second.
+
+
+### 1 second is pretty slow! Symlinking is not the culprit.
+Symlink Node Module Mapper has a command:
+```bash
+str=$(ls | grep -v -E '(^aerial_desktop$|^dyna-dynamic-walpaper$)' | xargs -I {} echo "$pathy/node_modules/{}");
+```
+1) grep ignores using regular expressions.
+2) string concats the path to the result of the grep command (expensive). 
+
+Additionally, Aerial Desktop uses electron so it has a large number of packages that this command must address.
+
+But if we were copying those files it would take 30 seconds, sooo ... 😉
+<br/>There are some additions that will optimize this slowness that are on the imaginary roadmap.
